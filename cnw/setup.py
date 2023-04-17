@@ -19,7 +19,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def setup(data_root, with_mapping):
+def setup(data_root, with_mapping, datasets=datasets.DATASETS):
     url_prefix = 'https://vitro-testing.com/wp-content/uploads/2022/12/'
 
     os.makedirs(data_root, exist_ok=True)
@@ -35,7 +35,7 @@ def setup(data_root, with_mapping):
     shutil.move(os.path.join(data_root, 'CropAndWeed'), os.path.join(data_root, 'bboxes', 'CropAndWeed'))
 
     if with_mapping:
-        for dataset in datasets.DATASETS:
+        for dataset in datasets:
             if dataset != 'CropAndWeed':
                 map_dataset(os.path.join(data_root, 'bboxes'), os.path.join(data_root, 'labelIds'), 'CropAndWeed',
                             dataset)

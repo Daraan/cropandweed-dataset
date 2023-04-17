@@ -9,6 +9,7 @@ import numpy as np
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='map annotated classes between datasets')
+    
     parser.add_argument('--bboxes', type=str, default='../data/bboxes',
                         help='directory for input and output bounding-box annotations as csv files in sub-directories '
                              'for each dataset variant')
@@ -17,10 +18,12 @@ def parse_arguments():
                              'in sub-directories for each dataset variant')
     parser.add_argument('--dataset_source', type=str, default='CropAndWeed', help='name of source dataset')
     parser.add_argument('--dataset_target', type=str, required=True, help='name of target dataset')
+    
+    parser.add_argument('--bboxes_only', type=bool, required=False, help="Do not create segmentation masks", default=False)
     return parser.parse_args()
 
 
-def map_dataset(bboxes_dir, labelids_dir, dataset_source, dataset_target):
+def map_dataset(bboxes_dir, labelids_dir, dataset_source, dataset_target, bboxes_only=False):
     if dataset_target not in datasets.DATASETS:
         raise RuntimeError(f'target dataset {dataset_target} not defined in datasets.py')
 
@@ -65,26 +68,27 @@ def map_dataset(bboxes_dir, labelids_dir, dataset_source, dataset_target):
                 for row in rows + rows_eval:
                     output_anno.writerow(row)
 
-    labelids_source = os.path.join(labelids_dir, dataset_source)
-    for file_name in tqdm(os.listdir(labelids_source),
-                          desc=f'mapping semantic masks to target dataset {dataset_target}'):
-        mask = cv2.imread(os.path.join(labelids_source, file_name), cv2.IMREAD_GRAYSCALE)
-        output_mask = np.zeros_like(mask)
-        include = False
-        for source_id in np.unique(mask):
-            target_id = labels.get_mapped_id(source_id)
-            if target_id is not None:
-                output_mask[mask == source_id] = target_id
-                include = True
-            else:
-                output_mask[mask == source_id] = n_labels
-        if include:
-            cv2.imwrite(os.path.join(labelids_target, file_name), output_mask)
+    if not bboxes_only:
+        labelids_source = os.path.join(labelids_dir, dataset_source)
+        for file_name in tqdm(os.listdir(labelids_source),
+                              desc=f'mapping semantic masks to target dataset {dataset_target}'):
+            mask = cv2.imread(os.path.join(labelids_source, file_name), cv2.IMREAD_GRAYSCALE)
+            output_mask = np.zeros_like(mask)
+            include = False
+            for source_id in np.unique(mask):
+                target_id = labels.get_mapped_id(source_id)
+                if target_id is not None:
+                    output_mask[mask == source_id] = target_id
+                    include = True
+                else:
+                    output_mask[mask == source_id] = n_labels
+            if include:
+                cv2.imwrite(os.path.join(labelids_target, file_name), output_mask)
 
 
 def main():
     args = parse_arguments()
-    map_dataset(args.bboxes, args.labelids, args.dataset_source, args.dataset_target)
+    map_dataset(args.bboxes, args.labelids, args.dataset_source, args.dataset_target, bboxes_only=args.bboxes_only)
 
 
 if __name__ == '__main__':
