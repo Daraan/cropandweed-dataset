@@ -1,7 +1,9 @@
+
 class Dataset:
-    def __init__(self, labels):
+    def __init__(self, labels, name=None):
         self.labels = {}
         self.mapping = {}
+        self.name = name
         for label_id, label in labels.items():
             if type(label) is tuple:
                 self.labels[label_id] = (label[0], label[1], label_id) if len(label) > 1 else (label[0], (0, 0, 0))
@@ -31,7 +33,18 @@ class Dataset:
 
 DATASETS = dict()
 
-DATASETS['CropAndWeed'] = Dataset({
+# Some information about the structure
+#DATASETS['Fine24'] = Dataset({
+#    0: ('Maize', (255, 0, 0), [1, 2, 3, 4, 5, 6]),  # (Name, Segmentation color, sample_ids)
+#    1: ('Sugar beet', (255, 85, 0), [7, 8, 9, 10, 11, 12])
+#    ...
+
+#DATASETS['Fine24'].get_mapped_id(12),    # sample_id -> key, e.g: 1...6 -> 0 -> Maize
+#DATASETS['Fine24'].get_label_name(1),    # key -> name
+#DATASETS['Fine24'].get_label_color(1))   # key -> color 
+
+
+DATASETS['CropAndWeed'] = Dataset(name='CropAndWeed', labels={
     0: ('Soil', (0, 0, 0)),
     1: ('Maize', (255, 0, 0)),
     2: ('Maize two-leaf stage', (234, 0, 0)),
