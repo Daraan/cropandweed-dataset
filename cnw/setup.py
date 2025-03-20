@@ -10,38 +10,52 @@ from map_dataset import map_dataset
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='download and extract all dataset images and annotations with '
-                                                 'optional mapping to all pre-defined dataset variants')
-    parser.add_argument('--data_root', type=str, default='../data',
-                        help='directory for downloaded images and annotations')
-    parser.add_argument('--no_mapping', dest='with_mapping', action='store_false', default=True,
-                        help='skip mapping for predefined dataset variants')
-
-                                     
+    parser = argparse.ArgumentParser(
+        description="download and extract all dataset images and annotations with "
+        "optional mapping to all pre-defined dataset variants"
+    )
+    parser.add_argument(
+        "--data_root", type=str, default="../data", help="directory for downloaded images and annotations"
+    )
+    parser.add_argument(
+        "--no_mapping",
+        dest="with_mapping",
+        action="store_false",
+        default=True,
+        help="skip mapping for predefined dataset variants",
+    )
     return parser.parse_args()
 
 
 def setup(data_root, with_mapping, download=True, datasets=datasets.DATASETS):
-    url_prefix = 'https://vitro-testing.com/wp-content/uploads/2022/12/'
+    url_prefix = "https://vitro-testing.com/wp-content/uploads/2022/12/"
 
     os.makedirs(data_root, exist_ok=True)
 
     if download:
         for file_name in tqdm(
-                ['cropandweed_annotations', 'cropandweed_images1of4', 'cropandweed_images2of4', 'cropandweed_images3of4',
-                 'cropandweed_images4of4'], desc='downloading and extracting files'):
-            response = requests.get(f'{url_prefix}{file_name}.tar', stream=True)
-            archive = tarfile.open(fileobj=response.raw, mode='r|')
+            [
+                "cropandweed_annotations",
+                "cropandweed_images1of4",
+                "cropandweed_images2of4",
+                "cropandweed_images3of4",
+                "cropandweed_images4of4",
+            ],
+            desc="downloading and extracting files",
+        ):
+            response = requests.get(f"{url_prefix}{file_name}.tar", stream=True)
+            archive: tarfile.TarFile = tarfile.open(fileobj=response.raw, mode="r|")  # type: ignore
             archive.extractall(data_root)
 
-        shutil.move(os.path.join(data_root, 'bboxes'), os.path.join(data_root, 'CropAndWeed'))
-        shutil.move(os.path.join(data_root, 'CropAndWeed'), os.path.join(data_root, 'bboxes', 'CropAndWeed'))
+        shutil.move(os.path.join(data_root, "bboxes"), os.path.join(data_root, "CropAndWeed"))
+        shutil.move(os.path.join(data_root, "CropAndWeed"), os.path.join(data_root, "bboxes", "CropAndWeed"))
 
     if with_mapping:
         for dataset in datasets:
-            if dataset != 'CropAndWeed':
-                map_dataset(os.path.join(data_root, 'bboxes'), os.path.join(data_root, 'labelIds'), 'CropAndWeed',
-                            dataset)
+            if dataset != "CropAndWeed":
+                map_dataset(
+                    os.path.join(data_root, "bboxes"), os.path.join(data_root, "labelIds"), "CropAndWeed", dataset
+                )
 
 
 def main():
@@ -49,5 +63,5 @@ def main():
     setup(args.data_root, args.with_mapping)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
